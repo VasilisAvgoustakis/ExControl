@@ -1,0 +1,61 @@
+#-----------------------------------------------------
+# Visual Studio / VS Code / Rider
+#-----------------------------------------------------
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.ide
+
+#-----------------------------------------------------
+# Build outputs
+#-----------------------------------------------------
+src/bin/
+tests/bin/
+src/obj/
+tests/obj/
+/TestResults/
+
+#-----------------------------------------------------
+# Coverage / Analysis
+#-----------------------------------------------------
+/coverage/
+/CoverletOutput/
+/*.coverage
+*.coveragexml
+*.codecoverage
+
+#-----------------------------------------------------
+# OS-generated files
+#-----------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+#-----------------------------------------------------
+# Logs
+#-----------------------------------------------------
+*.log
+debug.log
+error.log
+
+#-----------------------------------------------------
+# NuGet Packages
+# (Uncomment if you do not wish to commit your packages folder)
+#-----------------------------------------------------
+# /packages/
+# Project-specific nuget package references in .csproj 
+# typically make checking in /packages/ unnecessary
+
+#-----------------------------------------------------
+# Other optional ignores:
+#-----------------------------------------------------
+# If you store secrets or credentials in a local JSON/config:
+# appsettings.Local.json
+# *.secret.json
+
+prompts_plan.md
