@@ -12,11 +12,11 @@ Below is a **`todo.md`** file you can include in your project. It’s a **checkl
 - [x] **A.5**: Document build/test run instructions (e.g., `dotnet test`, `pytest`).
 
 ## **Milestone B: JSON Data Structures & Basic CRUD**
-- [ ] **B.1**: Create `Device` class/record with required properties (Name, Type, IP, MAC, Area, Category, SchedulerGroups, Commands, Dependencies, Schedule).
-- [ ] **B.2**: Create `Dependency` and `ScheduleEntry` classes/records.
-- [ ] **B.3**: Implement `JsonStorage.LoadDevices()` and `JsonStorage.SaveDevices()` to read/write `List<Device>`.
-- [ ] **B.4**: Write unit tests for loading/saving device data from `devices.json`.
-- [ ] **B.5**: Verify all tests pass and handle edge cases (empty or invalid JSON).
+- [x] **B.1**: Create `Device` class/record with required properties (Name, Type, IP, MAC, Area, Category, SchedulerGroups, Commands, Dependencies, Schedule).
+- [x] **B.2**: Create `Dependency` and `ScheduleEntry` classes/records.
+- [x] **B.3**: Implement `JsonStorage.LoadDevices()` and `JsonStorage.SaveDevices()` to read/write `List<Device>`.
+- [x] **B.4**: Write unit tests for loading/saving device data from `devices.json`.
+- [x] **B.5**: Verify all tests pass and handle edge cases (empty or invalid JSON).
 
 ## **Milestone C: Device Management (Add/Edit/Remove)**
 - [ ] **C.1**: Implement a `DeviceManager` class to store devices in-memory.

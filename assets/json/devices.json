@@ -1,0 +1,59 @@
+[
+  {
+    "Name": "PC-1",
+    "Type": "pc",
+    "IP": "192.168.0.10",
+    "MAC": "00:11:22:33:44:55",
+    "Area": "MainHall",
+    "Category": "PCs",
+    "SchedulerGroups": [
+      "GroupA",
+      "GroupB"
+    ],
+    "Commands": {
+      "on": "wolCommand",
+      "off": "shutdown -s -t 0"
+    },
+    "Dependencies": [
+      {
+        "DependsOn": "Projector-1",
+        "DelayMinutes": 5
+      }
+    ],
+    "Schedule": [
+      {
+        "Action": "turn_on",
+        "Time": "08:00",
+        "Days": [
+          "Monday",
+          "Tuesday"
+        ]
+      },
+      {
+        "Action": "turn_off",
+        "Time": "18:00",
+        "Days": [
+          "Monday",
+          "Tuesday"
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Projector-1",
+    "Type": "projector",
+    "IP": "192.168.0.20",
+    "MAC": "AA:BB:CC:DD:EE:FF",
+    "Area": "MainHall",
+    "Category": "Projectors",
+    "SchedulerGroups": [
+      "GroupA"
+    ],
+    "Commands": {
+      "on": "proj_on",
+      "off": "proj_off"
+    },
+    "Dependencies": [],
+    "Schedule": []
+  }
+]

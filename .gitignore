@@ -59,3 +59,4 @@ error.log
 # *.secret.json
 
 prompts_plan.md
+repomix-output.txt
