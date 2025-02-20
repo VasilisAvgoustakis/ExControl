@@ -19,11 +19,11 @@ Below is a **`todo.md`** file you can include in your project. It’s a **checkl
 - [x] **B.5**: Verify all tests pass and handle edge cases (empty or invalid JSON).
 
 ## **Milestone C: Device Management (Add/Edit/Remove)**
-- [ ] **C.1**: Implement a `DeviceManager` class to store devices in-memory.
-- [ ] **C.2**: Add methods: `AddDevice(Device device)`, `EditDevice(Device device)`, `RemoveDevice(string deviceName)`.
-- [ ] **C.3**: Ensure each method auto-saves changes to `devices.json`.
-- [ ] **C.4**: Write tests for add/edit/remove logic, verifying JSON updates.
-- [ ] **C.5**: Confirm removal of a device also removes references from groups, or handle gracefully.
+- [x] **C.1**: Implement a `DeviceManager` class to store devices in-memory.
+- [x] **C.2**: Add methods: `AddDevice(Device device)`, `EditDevice(Device device)`, `RemoveDevice(string deviceName)`.
+- [x] **C.3**: Ensure each method auto-saves changes to `devices.json`.
+- [x] **C.4**: Write tests for add/edit/remove logic, verifying JSON updates.
+- [x] **C.5**: Confirm removal of a device also removes references from groups, or handle gracefully.
 
 ## **Milestone D: Scheduling Logic & “Last Action Wins”**
 - [ ] **D.1**: Create a `Scheduler` class to parse device schedules (weekly or one-time).

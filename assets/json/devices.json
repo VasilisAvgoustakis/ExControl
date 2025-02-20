@@ -27,7 +27,9 @@
         "Days": [
           "Monday",
           "Tuesday"
-        ]
+        ],
+        "OneTimeUtc": null,
+        "HasTriggered": false
       },
       {
         "Action": "turn_off",
@@ -35,7 +37,9 @@
         "Days": [
           "Monday",
           "Tuesday"
-        ]
+        ],
+        "OneTimeUtc": null,
+        "HasTriggered": false
       }
     ]
   },
