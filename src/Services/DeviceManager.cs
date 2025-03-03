@@ -9,12 +9,22 @@ namespace ExControl.Services
     public class DeviceManager
     {
         private readonly List<Device> _devices;
+        private readonly ManualControlService _manualControlService;
 
         /// <summary>
-        /// Loads all devices from JSON on construction.
+        /// Loads all devices from JSON on construction, using a default ManualControlService.
         /// </summary>
         public DeviceManager()
+            : this(new ManualControlService())
         {
+        }
+
+        /// <summary>
+        /// Internal or test constructor allowing injection of a ManualControlService.
+        /// </summary>
+        public DeviceManager(ManualControlService manualControlService)
+        {
+            _manualControlService = manualControlService ?? throw new ArgumentNullException(nameof(manualControlService));
             _devices = JsonStorage.LoadDevices();
         }
 
@@ -101,7 +111,7 @@ namespace ExControl.Services
             existing.SchedulerGroups = new List<string>(updatedDevice.SchedulerGroups);
             existing.Commands = new Dictionary<string, string>(updatedDevice.Commands);
             existing.Dependencies = new List<Dependency>(updatedDevice.Dependencies);
-            existing.Schedule = new List<ScheduleEntry>(updatedDevice.Schedule);
+            existing.Schedule = new List<Models.ScheduleEntry>(updatedDevice.Schedule);
 
             JsonStorage.SaveDevices(_devices);
         }
@@ -135,6 +145,81 @@ namespace ExControl.Services
         public void SaveChanges()
         {
             JsonStorage.SaveDevices(_devices);
+        }
+
+        // ---------------------------------------------------------------------------------------
+        // NEW GROUPING METHODS
+        // ---------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Iterates over all devices that have 'groupName' in their SchedulerGroups
+        /// and calls TurnDeviceOn(...) on each, via the ManualControlService.
+        /// </summary>
+        public void TurnGroupOn(string groupName)
+        {
+            if (string.IsNullOrWhiteSpace(groupName))
+                throw new ArgumentNullException(nameof(groupName), "Group name cannot be null or empty.");
+
+            // Find devices that contain this group
+            var matchingDevices = _devices
+                .Where(d => d.SchedulerGroups.Any(g => g.Equals(groupName, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            foreach (var device in matchingDevices)
+            {
+                _manualControlService.TurnDeviceOn(device);
+            }
+        }
+
+        /// <summary>
+        /// Iterates over all devices that have 'groupName' in their SchedulerGroups
+        /// and calls TurnDeviceOff(...) on each, via the ManualControlService.
+        /// </summary>
+        public void TurnGroupOff(string groupName)
+        {
+            if (string.IsNullOrWhiteSpace(groupName))
+                throw new ArgumentNullException(nameof(groupName), "Group name cannot be null or empty.");
+
+            // Find devices that contain this group
+            var matchingDevices = _devices
+                .Where(d => d.SchedulerGroups.Any(g => g.Equals(groupName, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            foreach (var device in matchingDevices)
+            {
+                _manualControlService.TurnDeviceOff(device);
+            }
+        }
+
+        /// <summary>
+        /// Removes the specified group from all devices' SchedulerGroups list.
+        /// For example, if the group is being deleted from the system,
+        /// each device that references it will have it removed.
+        /// </summary>
+        public void RemoveGroup(string groupName)
+        {
+            if (string.IsNullOrWhiteSpace(groupName))
+                throw new ArgumentNullException(nameof(groupName), "Group name cannot be null or empty.");
+
+            bool modifiedAny = false;
+
+            foreach (var device in _devices)
+            {
+                // Remove all matches of groupName, ignoring case
+                int removed = device.SchedulerGroups.RemoveAll(
+                    g => g.Equals(groupName, StringComparison.OrdinalIgnoreCase)
+                );
+                if (removed > 0)
+                {
+                    modifiedAny = true;
+                }
+            }
+
+            if (modifiedAny)
+            {
+                // Save to JSON only if something actually changed
+                JsonStorage.SaveDevices(_devices);
+            }
         }
     }
 }

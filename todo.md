@@ -43,13 +43,13 @@ Below is a **`todo.md`** file you can include in your project. It’s a **checkl
 - [x] **E.5**: Verify that schedules remain intact after manual toggles.
 
 ## **Milestone F: Groups & Presets**
-- [ ] **F.1**: Let `Device.schedulerGroups` store membership for each group or preset.
-- [ ] **F.2**: Implement `TurnGroupOn(string groupName)` and `TurnGroupOff(string groupName)`.
-- [ ] **F.3**: On group removal, remove references from all devices.
-- [ ] **F.4**: Write tests:
+- [x] **F.1**: Let `Device.schedulerGroups` store membership for each group or preset.
+- [x] **F.2**: Implement `TurnGroupOn(string groupName)` and `TurnGroupOff(string groupName)`.
+- [x] **F.3**: On group removal, remove references from all devices.
+- [x] **F.4**: Write tests:
   - Multiple devices in one group toggled on/off
   - Removing a group, ensuring devices no longer list it
-- [ ] **F.5**: Confirm everything persists in `devices.json` as expected.
+- [x] **F.5**: Confirm everything persists in `devices.json` as expected.
 
 ## **Milestone G: Ping Monitoring & Online/Offline State**
 - [ ] **G.1**: Create `DeviceStatusMonitor` or similar to ping devices every 60s.
