@@ -41,7 +41,8 @@
         "OneTimeUtc": null,
         "HasTriggered": false
       }
-    ]
+    ],
+    "IsOnline": true
   },
   {
     "Name": "Projector-1",
@@ -58,6 +59,7 @@
       "off": "proj_off"
     },
     "Dependencies": [],
-    "Schedule": []
+    "Schedule": [],
+    "IsOnline": true
   }
 ]

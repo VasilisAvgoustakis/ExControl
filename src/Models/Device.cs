@@ -23,5 +23,6 @@ namespace ExControl.Models
 
         // Holds scheduled actions (weekly or one-time).
         public List<ScheduleEntry> Schedule { get; set; } = new List<ScheduleEntry>();
+        public bool IsOnline { get; set; } = true;
     }
 }

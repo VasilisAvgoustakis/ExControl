@@ -52,11 +52,11 @@ Below is a **`todo.md`** file you can include in your project. It’s a **checkl
 - [x] **F.5**: Confirm everything persists in `devices.json` as expected.
 
 ## **Milestone G: Ping Monitoring & Online/Offline State**
-- [ ] **G.1**: Create `DeviceStatusMonitor` or similar to ping devices every 60s.
-- [ ] **G.2**: Increment a failure counter upon ping failure; after 5 consecutive failures, mark device offline.
-- [ ] **G.3**: Mark device online immediately when it responds.
-- [ ] **G.4**: Write tests for offline/online transitions (simulate ping failures, then successes).
-- [ ] **G.5**: Verify device status is updated in-memory and in the UI (later).
+- [x] **G.1**: Create `DeviceStatusMonitor` or similar to ping devices every 60s.
+- [x] **G.2**: Increment a failure counter upon ping failure; after 3 consecutive failures, mark device offline.
+- [x] **G.3**: Mark device online immediately when it responds.
+- [x] **G.4**: Write tests for offline/online transitions (simulate ping failures, then successes).
+- [x] **G.5**: Verify device status is updated in-memory and in the UI (later).
 
 ## **Milestone H: Dependency Handling & Power Sequencing**
 - [ ] **H.1**: Add `dependencies` to each device; store `(dependsOn, delayMinutes)` pairs.
