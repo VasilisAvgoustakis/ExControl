@@ -26,21 +26,21 @@ Below is a **`todo.md`** file you can include in your project. It’s a **checkl
 - [x] **C.5**: Confirm removal of a device also removes references from groups, or handle gracefully.
 
 ## **Milestone D: Scheduling Logic & “Last Action Wins”**
-- [ ] **D.1**: Create a `Scheduler` class to parse device schedules (weekly or one-time).
-- [ ] **D.2**: Implement logic to determine actions (turn_on, turn_off) based on current time/day.
-- [ ] **D.3**: Handle conflicts by letting the last scheduled action in chronological order “win.”
-- [ ] **D.4**: Write unit tests for:
+- [x] **D.1**: Create a `Scheduler` class to parse device schedules (weekly or one-time).
+- [x] **D.2**: Implement logic to determine actions (turn_on, turn_off) based on current time/day.
+- [x] **D.3**: Handle conflicts by letting the last scheduled action in chronological order “win.”
+- [x] **D.4**: Write unit tests for:
   - Single device with multiple schedules
   - Overlapping schedules testing “last action wins”
   - One-time events
-- [ ] **D.5**: Confirm tests pass, with schedules executed correctly.
+- [x] **D.5**: Confirm tests pass, with schedules executed correctly.
 
 ## **Milestone E: Manual On/Off Commands & Test Stubs**
-- [ ] **E.1**: Add a `CommandExecutor` or similar class for manual device on/off.
-- [ ] **E.2**: For “on,” stub out (or implement) Wake-on-LAN; for “off,” stub out shutdown command.
-- [ ] **E.3**: Ensure manual toggles do not remove or alter future schedules.
-- [ ] **E.4**: Write tests simulating user-driven on/off, verifying logs or placeholders.
-- [ ] **E.5**: Verify that schedules remain intact after manual toggles.
+- [x] **E.1**: Add a `CommandExecutor` or similar class for manual device on/off.
+- [x] **E.2**: For “on,” stub out (or implement) Wake-on-LAN; for “off,” stub out shutdown command.
+- [x] **E.3**: Ensure manual toggles do not remove or alter future schedules.
+- [x] **E.4**: Write tests simulating user-driven on/off, verifying logs or placeholders.
+- [x] **E.5**: Verify that schedules remain intact after manual toggles.
 
 ## **Milestone F: Groups & Presets**
 - [ ] **F.1**: Let `Device.schedulerGroups` store membership for each group or preset.
