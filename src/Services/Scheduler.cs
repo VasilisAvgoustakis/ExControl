@@ -6,78 +6,119 @@ using ExControl.Models;
 
 namespace ExControl.Services
 {
-    /// <summary>
-    /// The Scheduler inspects each device's schedule to determine if any 
-    /// turn_on or turn_off actions apply at the given 'now' time.
-    /// 
-    /// "Last action wins" is enforced by taking all qualifying schedules 
-    /// up to the current time, sorting by their triggered time, and applying 
-    /// the final one.
-    /// </summary>
     public class Scheduler
     {
         /// <summary>
         /// Examines each device’s schedule to see if an action (turn_on/turn_off) 
-        /// should occur at or before the specified 'now'.
-        /// 
+        /// should occur at or before the specified 'now' time.
+        ///
         /// The last triggered schedule for a device determines its final action 
         /// ("last action wins"). If no schedule is triggered, no action is invoked.
-        /// 
+        ///
         /// For each triggered action, we call 'deviceAction(device, action)'.
         /// 
-        /// Typically, you'd call this method periodically (e.g., once per minute) 
-        /// to keep devices in sync with their schedules.
+        /// Now, we also factor in any dependency delays: if a device depends on others
+        /// being on for X minutes, we skip its immediate "turn_on" if that final
+        /// delayed time is still in the future.
         /// </summary>
-        /// <param name="devices">All devices to process.</param>
-        /// <param name="now">Current time (UTC recommended).</param>
-        /// <param name="deviceAction">A callback that will be invoked with (device, "turn_on"/"turn_off").</param>
         public void RunSchedules(
-            List<Device> devices, 
-            DateTime now, 
+            List<Device> devices,
+            DateTime now,
             Action<Device, string> deviceAction)
         {
             if (devices == null) return;
+
+            // We'll keep track of each device's actual "on time" to factor in dependency delays.
+            // Key = device.Name, Value = the actual time we turned it on in this scheduler pass.
+            var actualOnTimes = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var device in devices)
             {
                 // 1) Collect all schedule entries that are "valid" as of 'now'.
                 var triggeredSchedules = GetTriggeredSchedules(device, now);
-
-                // 2) If none are triggered, do nothing.
                 if (!triggeredSchedules.Any()) continue;
 
-                // 3) "Last action wins": sort by the time they actually triggered, 
-                //    pick the final one.
+                // 2) "Last action wins": pick the final triggered schedule
                 var lastOne = triggeredSchedules
                     .OrderBy(s => s.TriggeredDateTime)
                     .Last();
 
-                // 4) Perform the device action (turn_on or turn_off).
-                deviceAction(device, lastOne.Entry.Action);
+                // 3) If it's turn_on, we check dependency delays
+                if (lastOne.Entry.Action.Equals("turn_on", StringComparison.OrdinalIgnoreCase))
+                {
+                    // The normal "trigger time" is lastOne.TriggeredDateTime.
+                    var nominalOnTime = lastOne.TriggeredDateTime;
 
-                // 5) If any of these are one-time schedules, set HasTriggered = true.
+                    // Adjust that time based on dependencies
+                    var finalOnTime = AdjustForDependencies(device, nominalOnTime, actualOnTimes);
+
+                    // If the finalOnTime is still in the future, skip turning on now
+                    if (finalOnTime <= now)
+                    {
+                        deviceAction(device, "turn_on");
+                        // Record that we turned it on right now
+                        actualOnTimes[device.Name] = now;
+                    }
+                    // else: we do nothing if it's not "time" yet
+                }
+                else if (lastOne.Entry.Action.Equals("turn_off", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Turn off immediately, ignoring dependencies
+                    deviceAction(device, "turn_off");
+                    // If we had an on-time recorded, remove it
+                    if (actualOnTimes.ContainsKey(device.Name))
+                    {
+                        actualOnTimes.Remove(device.Name);
+                    }
+                }
+
+                // 4) Mark one-time schedules as triggered
                 MarkOneTimeSchedulesAsTriggered(triggeredSchedules);
             }
         }
 
         /// <summary>
-        /// Examines a single device’s schedule and returns all schedules 
-        /// that have triggered on or before 'now'.
-        /// 
-        /// Each returned item has 'TriggeredDateTime' to indicate the 
-        /// effective trigger time for "last action wins" sorting.
+        /// Computes the final time the device can turn on, given its dependencies'
+        /// actual on-times plus their respective delays. If a dependency has no
+        /// known on-time, we ignore it (the device eventually turns on anyway).
         /// </summary>
+        private DateTime AdjustForDependencies(
+            Device device,
+            DateTime scheduledOnTime,
+            Dictionary<string, DateTime> actualOnTimes)
+        {
+            DateTime finalTime = scheduledOnTime;
+
+            if (device.Dependencies != null)
+            {
+                foreach (var dep in device.Dependencies)
+                {
+                    if (actualOnTimes.TryGetValue(dep.DependsOn, out var depOnTime))
+                    {
+                        var candidate = depOnTime.AddMinutes(dep.DelayMinutes);
+                        if (candidate > finalTime)
+                        {
+                            finalTime = candidate;
+                        }
+                    }
+                }
+            }
+
+            return finalTime;
+        }
+
+        // -----------------------------------------
+        // (No changes in the methods below)
+        // -----------------------------------------
+        
         private List<ScheduleTrigger> GetTriggeredSchedules(Device device, DateTime now)
         {
             var results = new List<ScheduleTrigger>();
 
             foreach (var entry in device.Schedule)
             {
-                // Check if this entry is weekly or one-time.
                 if (entry.Days.Count > 0)
                 {
-                    // Weekly schedule
-                    // e.g. entry.Days = ["Monday", "Wednesday"], entry.Time = "09:00"
                     var triggeredAt = GetWeeklyTriggerTime(entry, now);
                     if (triggeredAt != null)
                     {
@@ -86,7 +127,6 @@ namespace ExControl.Services
                 }
                 else if (!string.IsNullOrEmpty(entry.OneTimeUtc))
                 {
-                    // One-time schedule
                     var triggeredAt = GetOneTimeTriggerTime(entry, now);
                     if (triggeredAt != null)
                     {
@@ -98,112 +138,69 @@ namespace ExControl.Services
             return results;
         }
 
-        /// <summary>
-        /// For a weekly schedule entry, returns the actual DateTime it triggered 
-        /// if it's on or before 'now'. Otherwise, null if it hasn't triggered yet 
-        /// (or not valid for this day).
-        /// </summary>
         private DateTime? GetWeeklyTriggerTime(ScheduleEntry entry, DateTime now)
         {
-            // 1) Check if 'now.DayOfWeek' is in entry.Days (case-insensitive)
-            var dayName = now.DayOfWeek.ToString(); // "Monday", "Tuesday", etc.
-            bool dayMatches = entry.Days.Any(
-                d => d.Equals(dayName, StringComparison.OrdinalIgnoreCase)
-            );
+            var dayName = now.DayOfWeek.ToString();
+            bool dayMatches = entry.Days.Any(d => d.Equals(dayName, StringComparison.OrdinalIgnoreCase));
             if (!dayMatches) return null;
 
-            // 2) Parse entry.Time as HH:mm or HH:mm:ss
-            if (!TimeSpan.TryParseExact(entry.Time, 
-                                        new[] { "hh\\:mm", "HH\\:mm", "hh\\:mm\\:ss", "HH\\:mm\\:ss" }, 
-                                        CultureInfo.InvariantCulture, 
-                                        out var scheduleTime))
+            if (!TimeSpan.TryParseExact(
+                    entry.Time,
+                    new[] { "hh\\:mm", "HH\\:mm", "hh\\:mm\\:ss", "HH\\:mm\\:ss" },
+                    CultureInfo.InvariantCulture,
+                    out var scheduleTime))
             {
-                // If parsing fails, skip this schedule as invalid
                 return null;
             }
 
-            // 3) Construct a DateTime for "today" at scheduleTime
-            var scheduledToday = new DateTime(
-                now.Year, now.Month, now.Day,
-                scheduleTime.Hours, 
-                scheduleTime.Minutes, 
-                scheduleTime.Seconds,
-                now.Kind // maintain UTC or local
-            );
+            var scheduledToday = new DateTime(now.Year, now.Month, now.Day,
+                                              scheduleTime.Hours,
+                                              scheduleTime.Minutes,
+                                              scheduleTime.Seconds,
+                                              now.Kind);
 
-            // 4) If scheduledToday <= now, it means the schedule has triggered
-            //    for today's date.
-            if (scheduledToday <= now)
-            {
-                return scheduledToday;
-            }
-
-            return null;
+            return (scheduledToday <= now) ? scheduledToday : (DateTime?)null;
         }
 
-        /// <summary>
-        /// For a one-time schedule entry, returns the actual DateTime it triggered 
-        /// if it's on or before 'now'. Returns null if it hasn't triggered or 
-        /// if it already triggered in the past (HasTriggered == true).
-        /// </summary>
         private DateTime? GetOneTimeTriggerTime(ScheduleEntry entry, DateTime now)
         {
-            // If it has already triggered once, do not trigger again.
             if (entry.HasTriggered) return null;
 
-            // Handle multiple possible formats, if you wish. For now, we only need "yyyy-MM-dd HH:mm".
             var formats = new[] { "yyyy-MM-dd HH:mm", "yyyy-MM-dd'T'HH:mm" };
-
-            if (!DateTime.TryParseExact(entry.OneTimeUtc,
-                                        formats,
-                                        CultureInfo.InvariantCulture,
-                                        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                                        out var oneTimeDate))
+            if (!DateTime.TryParseExact(
+                    entry.OneTimeUtc,
+                    formats,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                    out var oneTimeDate))
             {
-                // If parsing fails or the format is different, skip
                 return null;
             }
 
-            // If oneTimeDate <= now => it triggered, else not yet
-            if (oneTimeDate <= now)
-            {
-                return oneTimeDate;
-            }
-
-            return null;
+            return (oneTimeDate <= now) ? oneTimeDate : (DateTime?)null;
         }
 
-
-        /// <summary>
-        /// Marks any one-time schedule entries as triggered (HasTriggered = true) 
-        /// so they won't fire again.
-        /// </summary>
         private void MarkOneTimeSchedulesAsTriggered(List<ScheduleTrigger> triggered)
         {
             foreach (var item in triggered)
             {
-                // Only for one-time entries
                 if (item.Entry.Days.Count == 0 && !string.IsNullOrEmpty(item.Entry.OneTimeUtc))
                 {
                     item.Entry.HasTriggered = true;
                 }
             }
         }
-    }
 
-    /// <summary>
-    /// Internal helper struct to keep track of a triggered schedule entry 
-    /// and the exact date/time it triggered.
-    /// </summary>
-    internal struct ScheduleTrigger
-    {
-        public ScheduleEntry Entry { get; }
-        public DateTime TriggeredDateTime { get; }
-
-        public ScheduleTrigger(ScheduleEntry entry, DateTime triggeredDateTime)
+        internal struct ScheduleTrigger
         {
-            Entry = entry;
-            TriggeredDateTime = triggeredDateTime;
+            public ScheduleEntry Entry { get; }
+            public DateTime TriggeredDateTime { get; }
+
+            public ScheduleTrigger(ScheduleEntry entry, DateTime triggeredDateTime)
+            {
+                Entry = entry;
+                TriggeredDateTime = triggeredDateTime;
+            }
         }
     }
 }

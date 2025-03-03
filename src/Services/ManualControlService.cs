@@ -9,6 +9,11 @@ namespace ExControl.Services
     /// </summary>
     public class ManualControlService
     {
+
+        // We'll maintain a dictionary of which devices are "manually turned on" at what time,
+        // so we can figure out delays if multiple calls happen in a short window.
+        private readonly Dictionary<string, DateTime> _manualOnTimes = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+
         /// <summary>
         /// Turns a device on (stub). In a real system, you might call Wake-on-LAN or send
         /// a power command over the network. Here, we log or print a stub message.
@@ -60,6 +65,38 @@ namespace ExControl.Services
                 Console.WriteLine($"[ManualControlService] No 'off' command found for device {device.Name}.");
                 return false;
             }
+        }
+
+        // ----------------------------------------------
+        // PRIVATE method to compute the "final on time"
+        // if dependencies are currently scheduled or manually turned on
+        // ----------------------------------------------
+        private DateTime _computeDelayForDependencies(Device device, DateTime now)
+        {
+            if (device.Dependencies == null || !device.Dependencies.Any())
+                return now; // no dependencies => no delay
+
+            DateTime finalTime = now;
+
+            foreach (var dep in device.Dependencies)
+            {
+                // If the dependency device never turned on or does not exist => skip
+                if (!_manualOnTimes.TryGetValue(dep.DependsOn, out var depOnTime))
+                {
+                    // "If the dependency is offline or removed... the device eventually turns on anyway."
+                    // So we just ignore
+                    continue;
+                }
+
+                // If found, candidate time is depOnTime + delay
+                var candidate = depOnTime.AddMinutes(dep.DelayMinutes);
+                if (candidate > finalTime)
+                {
+                    finalTime = candidate;
+                }
+            }
+
+            return finalTime;
         }
     }
 }

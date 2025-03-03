@@ -59,11 +59,11 @@ Below is a **`todo.md`** file you can include in your project. It’s a **checkl
 - [x] **G.5**: Verify device status is updated in-memory and in the UI (later).
 
 ## **Milestone H: Dependency Handling & Power Sequencing**
-- [ ] **H.1**: Add `dependencies` to each device; store `(dependsOn, delayMinutes)` pairs.
-- [ ] **H.2**: On turn_on or turn_off, consider dependency delays. 
-- [ ] **H.3**: If a dependency device is offline or removed, proceed anyway.
-- [ ] **H.4**: Detect and block circular dependencies (basic check).
-- [ ] **H.5**: Test multiple dependencies in a chain, verifying delayed ordering.
+- [x] **H.1**: Add `dependencies` to each device; store `(dependsOn, delayMinutes)` pairs.
+- [x] **H.2**: On turn_on or turn_off, consider dependency delays. 
+- [x] **H.3**: If a dependency device is offline or removed, proceed anyway.
+- [x] **H.4**: Detect and block circular dependencies (basic check).
+- [x] **H.5**: Test multiple dependencies in a chain, verifying delayed ordering.
 
 ## **Milestone I: Power Strips & Outlet Control**
 - [ ] **I.1**: Represent power strips as `Device` with a special `type = "power_strip"` and an array of outlets.

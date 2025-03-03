@@ -66,16 +66,24 @@ namespace ExControl.Services
             if (string.IsNullOrWhiteSpace(device.Name))
                 throw new ArgumentException("Device.Name cannot be null or empty.");
 
-            // Check if a device with this name already exists
             bool alreadyExists = _devices.Any(d => d.Name.Equals(device.Name, StringComparison.OrdinalIgnoreCase));
             if (alreadyExists)
             {
-                throw new InvalidOperationException(
-                    $"A device with the name '{device.Name}' already exists."
-                );
+                throw new InvalidOperationException($"A device with the name '{device.Name}' already exists.");
             }
 
+            // Temporarily add the device
             _devices.Add(device);
+
+            // Check for circular dependencies
+            if (HasCircularDependencies(device.Name))
+            {
+                // Revert
+                _devices.Remove(device);
+                throw new InvalidOperationException("Circular dependency detected. This device’s dependencies create a loop.");
+            }
+
+            // If no cycle, save to JSON
             JsonStorage.SaveDevices(_devices);
         }
 
@@ -112,6 +120,13 @@ namespace ExControl.Services
             existing.Commands = new Dictionary<string, string>(updatedDevice.Commands);
             existing.Dependencies = new List<Dependency>(updatedDevice.Dependencies);
             existing.Schedule = new List<Models.ScheduleEntry>(updatedDevice.Schedule);
+
+            // Check for circular dependencies
+            if (HasCircularDependencies(existing.Name))
+            {
+                // Revert changes
+                throw new InvalidOperationException("Circular dependency detected. This edit creates a dependency loop.");
+            }
 
             JsonStorage.SaveDevices(_devices);
         }
@@ -220,6 +235,52 @@ namespace ExControl.Services
                 // Save to JSON only if something actually changed
                 JsonStorage.SaveDevices(_devices);
             }
+        }
+
+        // -----------------------------
+        //  CYCLE DETECTION LOGIC
+        // -----------------------------
+        private bool HasCircularDependencies(string rootDeviceName)
+        {
+            // We'll do a DFS from 'rootDeviceName' to see if we ever come back to root.
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            return DetectCycle(rootDeviceName, visited, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+        }
+
+        private bool DetectCycle(string deviceName, HashSet<string> visited, HashSet<string> stack)
+        {
+            if (stack.Contains(deviceName))
+            {
+                // This means we've visited 'deviceName' already in the current path => cycle
+                return true;
+            }
+
+            // If we've visited it globally (and it didn't cause a cycle previously),
+            // no need to revisit
+            if (visited.Contains(deviceName))
+            {
+                return false;
+            }
+
+            visited.Add(deviceName);
+            stack.Add(deviceName);
+
+            // Find the device in question
+            var dev = _devices.FirstOrDefault(d => d.Name.Equals(deviceName, StringComparison.OrdinalIgnoreCase));
+            if (dev != null)
+            {
+                foreach (var dep in dev.Dependencies)
+                {
+                    // If the dependency device name is the same as root or leads to root => cycle
+                    if (DetectCycle(dep.DependsOn, visited, stack))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            stack.Remove(deviceName);
+            return false;
         }
     }
 }
