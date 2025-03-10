@@ -98,5 +98,90 @@ namespace ExControl.Services
 
             return finalTime;
         }
+
+
+        /// <summary>
+        /// Attempts to turn a specific outlet on a power strip on.
+        /// If the device.Type != "power_strip", or if it's offline, or if the outlet index is invalid,
+        /// we log an error and return false.
+        /// </summary>
+        public bool TurnOutletOn(Device device, int outletIndex)
+        {
+            if (device == null) throw new ArgumentNullException(nameof(device));
+            if (!device.IsOnline)
+            {
+                Console.WriteLine($"[ManualControlService] Cannot turn outlet ON because '{device.Name}' is offline.");
+                return false;
+            }
+
+            if (!device.Type.Equals("power_strip", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"[ManualControlService] Device '{device.Name}' is not a power strip.");
+                return false;
+            }
+
+            if (outletIndex < 0 || outletIndex >= device.Outlets.Count)
+            {
+                Console.WriteLine($"[ManualControlService] Invalid outlet index '{outletIndex}' for device '{device.Name}'.");
+                return false;
+            }
+
+            var outlet = device.Outlets[outletIndex];
+            // If outlet has specific commands
+            if (outlet.Commands.TryGetValue("on", out var onCmd))
+            {
+                // Actually run command or stub
+                Console.WriteLine($"[ManualControlService] TURN ON outlet '{outlet.Name}' of '{device.Name}' using cmd '{onCmd}'");
+            }
+            else
+            {
+                // fallback or log
+                Console.WriteLine($"[ManualControlService] No 'on' command found for outlet '{outlet.Name}' on '{device.Name}'.");
+            }
+
+            // Mark outlet as on
+            outlet.IsOn = true;
+            return true;
+        }
+
+        /// <summary>
+        /// Attempts to turn a specific outlet on a power strip off.
+        /// Similar checks to TurnOutletOn.
+        /// </summary>
+        public bool TurnOutletOff(Device device, int outletIndex)
+        {
+            if (device == null) throw new ArgumentNullException(nameof(device));
+            if (!device.IsOnline)
+            {
+                Console.WriteLine($"[ManualControlService] Cannot turn outlet OFF because '{device.Name}' is offline.");
+                return false;
+            }
+
+            if (!device.Type.Equals("power_strip", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"[ManualControlService] Device '{device.Name}' is not a power strip.");
+                return false;
+            }
+
+            if (outletIndex < 0 || outletIndex >= device.Outlets.Count)
+            {
+                Console.WriteLine($"[ManualControlService] Invalid outlet index '{outletIndex}' for device '{device.Name}'.");
+                return false;
+            }
+
+            var outlet = device.Outlets[outletIndex];
+            if (outlet.Commands.TryGetValue("off", out var offCmd))
+            {
+                Console.WriteLine($"[ManualControlService] TURN OFF outlet '{outlet.Name}' of '{device.Name}' using cmd '{offCmd}'");
+            }
+            else
+            {
+                Console.WriteLine($"[ManualControlService] No 'off' command found for outlet '{outlet.Name}' on '{device.Name}'.");
+            }
+
+            outlet.IsOn = false;
+            return true;
+        }
+
     }
 }

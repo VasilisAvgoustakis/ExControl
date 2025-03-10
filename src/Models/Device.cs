@@ -14,6 +14,9 @@ namespace ExControl.Models
         
         // For assigning a device to multiple scheduler groups (presets).
         public List<string> SchedulerGroups { get; set; } = new List<string>();
+        // In Device.cs, inside the Device class:
+        public List<Outlet> Outlets { get; set; } = new List<Outlet>();
+
 
         // E.g., {"on": "...", "off": "..."}
         public Dictionary<string, string> Commands { get; set; } = new Dictionary<string, string>();

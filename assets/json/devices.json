@@ -10,6 +10,7 @@
       "GroupA",
       "GroupB"
     ],
+    "Outlets": [],
     "Commands": {
       "on": "wolCommand",
       "off": "shutdown -s -t 0"
@@ -54,6 +55,7 @@
     "SchedulerGroups": [
       "GroupA"
     ],
+    "Outlets": [],
     "Commands": {
       "on": "proj_on",
       "off": "proj_off"

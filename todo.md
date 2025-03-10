@@ -66,11 +66,11 @@ Below is a **`todo.md`** file you can include in your project. It’s a **checkl
 - [x] **H.5**: Test multiple dependencies in a chain, verifying delayed ordering.
 
 ## **Milestone I: Power Strips & Outlet Control**
-- [ ] **I.1**: Represent power strips as `Device` with a special `type = "power_strip"` and an array of outlets.
-- [ ] **I.2**: Provide on/off commands for each outlet.
-- [ ] **I.3**: If strip is offline, mark all outlets as unavailable.
-- [ ] **I.4**: Test toggling outlets and simulate offline conditions.
-- [ ] **I.5**: Confirm outlet state is tracked accurately.
+- [x] **I.1**: Represent power strips as `Device` with a special `type = "power_strip"` and an array of outlets.
+- [x] **I.2**: Provide on/off commands for each outlet.
+- [x] **I.3**: If strip is offline, mark all outlets as unavailable.
+- [x] **I.4**: Test toggling outlets and simulate offline conditions.
+- [x] **I.5**: Confirm outlet state is tracked accurately.
 
 ## **Milestone J: Error Logging & Notifications**
 - [ ] **J.1**: Create a logging mechanism that appends to `debug.log`.
