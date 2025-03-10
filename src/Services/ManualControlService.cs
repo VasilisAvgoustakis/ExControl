@@ -15,50 +15,78 @@ namespace ExControl.Services
         private readonly Dictionary<string, DateTime> _manualOnTimes = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Turns a device on (stub). In a real system, you might call Wake-on-LAN or send
-        /// a power command over the network. Here, we log or print a stub message.
+        /// Attempts to execute a command with one retry.
+        /// If the initial attempt fails, waits for 5 seconds and retries.
+        /// Logs an error if the command still fails.
         /// </summary>
-        /// <param name="device">The device to turn on.</param>
-        /// <returns>True if command succeeded; false if it failed.</returns>
+        /// <param name="device">The target device.</param>
+        /// <param name="command">The command string to execute.</param>
+        /// <returns>True if the command ultimately succeeded; false otherwise.</returns>
+        private bool ExecuteDeviceCommand(Device device, string command)
+        {
+            bool success = TryExecuteCommand(device, command);
+            if (!success)
+            {
+                // Retry after a short delay (5 seconds)
+                Thread.Sleep(5000);
+                success = TryExecuteCommand(device, command);
+                if (!success)
+                {
+                    Logger.Log($"Command '{command}' failed on device '{device.Name}' after retry.");
+                }
+            }
+            return success;
+        }
+
+        /// <summary>
+        /// Simulates the attempt to execute a command.
+        /// In production, this would actually send the command over the network.
+        /// For simulation, any command equal to "fail" will simulate a failure.
+        /// </summary>
+        protected virtual bool TryExecuteCommand(Device device, string command)
+        {
+            // For demonstration, if the command is "fail", simulate a failure.
+            return command != "fail";
+        }
+
         public bool TurnDeviceOn(Device device)
         {
             if (device == null) 
                 throw new ArgumentNullException(nameof(device));
 
-            // If the device has a specific "on" command, we could attempt it
-            // For now, we'll just do a stub or console log
             if (device.Commands.TryGetValue("on", out var onCommand))
             {
-                // In real code, you might do: return SendWakeOnLan(device.MAC);
+                bool success = ExecuteDeviceCommand(device, onCommand);
+                if (!success)
+                {
+                    Console.WriteLine($"[ManualControlService] Failed to execute 'on' command for device '{device.Name}'.");
+                    return false;
+                }
                 Console.WriteLine($"[ManualControlService] TURN ON: {device.Name} using command '{onCommand}'");
-                return true; 
+                return true;
             }
             else
             {
-                // If no "on" command is defined, we log a warning
                 Console.WriteLine($"[ManualControlService] No 'on' command found for device {device.Name}.");
                 return false;
             }
         }
 
-        /// <summary>
-        /// Turns a device off (stub). In a real system, you might call "shutdown -s" or
-        /// send a projector off command. Here, we log or print a stub message.
-        /// </summary>
-        /// <param name="device">The device to turn off.</param>
-        /// <returns>True if command succeeded; false if it failed.</returns>
         public bool TurnDeviceOff(Device device)
         {
             if (device == null) 
                 throw new ArgumentNullException(nameof(device));
 
-            // If the device has a specific "off" command, we could attempt it
-            // For now, we just log a message
             if (device.Commands.TryGetValue("off", out var offCommand))
             {
-                // In real code, you might do: return SendShutdownCommand(device.IP);
+                bool success = ExecuteDeviceCommand(device, offCommand);
+                if (!success)
+                {
+                    Console.WriteLine($"[ManualControlService] Failed to execute 'off' command for device '{device.Name}'.");
+                    return false;
+                }
                 Console.WriteLine($"[ManualControlService] TURN OFF: {device.Name} using command '{offCommand}'");
-                return true; 
+                return true;
             }
             else
             {

@@ -73,14 +73,14 @@ Below is a **`todo.md`** file you can include in your project. It’s a **checkl
 - [x] **I.5**: Confirm outlet state is tracked accurately.
 
 ## **Milestone J: Error Logging & Notifications**
-- [ ] **J.1**: Create a logging mechanism that appends to `debug.log`.
-- [ ] **J.2**: On command failure for an online device, retry once. If still failing, log the error.
-- [ ] **J.3**: If device is offline, skip scheduled actions and log a “skipped” error/warning.
-- [ ] **J.4**: Display logs in an Error Log or notifications (depending on UI).
-- [ ] **J.5**: Test error conditions to confirm they are handled and logged properly.
+- [x] **J.1**: Create a logging mechanism that appends to `debug.log`.
+- [x] **J.2**: On command failure for an online device, retry once. If still failing, log the error.
+- [x] **J.3**: If device is offline, skip scheduled actions and log a “skipped” error/warning.
+- [x] **J.4**: Display logs in an Error Log or notifications (depending on UI).
+- [x] **J.5**: Test error conditions to confirm they are handled and logged properly.
 
 ## **Milestone K: UI/UX Integration**
-- [ ] **K.1**: Create a **Main Dashboard** showing:
+- [ ] **K.1**: Create a **Main Dashboard** with XAML showing:
   - Today’s scheduled actions
   - Global scheduler toggle
   - Main on/off button for “Main Mediatechnik Preset”

@@ -28,51 +28,46 @@ namespace ExControl.Services
         {
             if (devices == null) return;
 
-            // We'll keep track of each device's actual "on time" to factor in dependency delays.
-            // Key = device.Name, Value = the actual time we turned it on in this scheduler pass.
             var actualOnTimes = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var device in devices)
             {
-                // 1) Collect all schedule entries that are "valid" as of 'now'.
                 var triggeredSchedules = GetTriggeredSchedules(device, now);
                 if (!triggeredSchedules.Any()) continue;
 
-                // 2) "Last action wins": pick the final triggered schedule
                 var lastOne = triggeredSchedules
                     .OrderBy(s => s.TriggeredDateTime)
                     .Last();
 
-                // 3) If it's turn_on, we check dependency delays
+                // Check if device is offline; if so, skip the scheduled action and log it.
+                if (!device.IsOnline)
+                {
+                    Logger.Log($"Scheduled action '{lastOne.Entry.Action}' skipped for offline device '{device.Name}'.");
+                    continue;
+                }
+
                 if (lastOne.Entry.Action.Equals("turn_on", StringComparison.OrdinalIgnoreCase))
                 {
-                    // The normal "trigger time" is lastOne.TriggeredDateTime.
                     var nominalOnTime = lastOne.TriggeredDateTime;
-
-                    // Adjust that time based on dependencies
                     var finalOnTime = AdjustForDependencies(device, nominalOnTime, actualOnTimes);
 
-                    // If the finalOnTime is still in the future, skip turning on now
                     if (finalOnTime <= now)
                     {
+                        // Device is online (already checked above)
                         deviceAction(device, "turn_on");
-                        // Record that we turned it on right now
                         actualOnTimes[device.Name] = now;
                     }
-                    // else: we do nothing if it's not "time" yet
                 }
                 else if (lastOne.Entry.Action.Equals("turn_off", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Turn off immediately, ignoring dependencies
+                    // Device is online (already checked above)
                     deviceAction(device, "turn_off");
-                    // If we had an on-time recorded, remove it
                     if (actualOnTimes.ContainsKey(device.Name))
                     {
                         actualOnTimes.Remove(device.Name);
                     }
                 }
 
-                // 4) Mark one-time schedules as triggered
                 MarkOneTimeSchedulesAsTriggered(triggeredSchedules);
             }
         }
